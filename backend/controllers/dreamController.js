@@ -2,12 +2,13 @@ const asyncHandler = require('express-async-handler')
 
 
 const Dream = require('../models/dreamModel')
+const User = require('../models/userModel')
 
 // @desc    Get dreams
 // @route   GET /api/dreams
 // @access  Private
 const getDreams = asyncHandler(async (req, res) => {
-    const dreams = await Dream.find()
+    const dreams = await Dream.find({ user: req.user.id })
 
     res.status(200).json(dreams)
 })
@@ -24,21 +25,37 @@ const setDream = asyncHandler(async (req, res) => {
 
     const dream = await Dream.create( {
         title: req.body.title,
-        description: req.body.description
+        description: req.body.description,
+        user: req.user.id
     })
 
-    res.status(200).json({message: 'Create dream log'})
+    res.status(200).json(dream)
 })
 
 // @desc    Update a dream log
 // @route   PUT /api/dreams/:id
 // @access  Private
 const updateDream = asyncHandler(async (req, res) => {
+
     const dream = await Dream.findById(req.params.id)
 
     if(!dream) {
         res.status(400)
         throw new Error('Dream not found')
+    }
+
+    const user = await User.findById(req.user.id)
+
+    // Check for user
+    if(!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    // check if logged in user matches dream user
+    if(dream.user.toString() !== user.id) {
+        res.status(401)
+        throw new Error('User not authorized')
     }
 
     const updatedDream = await Dream.findByIdAndUpdate(req.params.id, req.body, {
@@ -57,6 +74,20 @@ const deleteDream = asyncHandler(async (req, res) => {
     if(!dream) {
         res.status(400)
         throw new Error('Dream not found')
+    }
+
+    const user = await User.findById(req.user.id)
+
+    // Check for user
+    if(!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    // check if logged in user matches dream user
+    if(dream.user.toString() !== user.id) {
+        res.status(401)
+        throw new Error('User not authorized')
     }
 
     await dream.remove()
