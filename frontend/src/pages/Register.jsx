@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { FaUser } from 'react-icons/fa'
+import { register, reset } from '../features/auth/authSlice'
+import Spinner from '../components/Spinner'
 
 function Register() {
+    // useState hook for tracking & updating form data
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -9,17 +15,61 @@ function Register() {
         password2: ''
     })
 
+    // Deconstruct form data
     const { name, email, password, password2 } = formData
 
-    const onSubmit = (evt) => {
-        evt.preventDefault()
-    }
+    const navigate = useNavigate()  // Used for navigating to web pages
+    const dispatch = useDispatch()  // Used for dispatching actions to store
 
+    // Get current application state from store
+    const { user, isLoading, isError, isSuccess, message } = useSelector(
+        (state) => state.auth)
+
+    // When the page re-renders
+    useEffect(() => {
+        if (isError) {  // Check for error in state
+            toast.error(message)    // Return error message
+        }
+
+        if (isSuccess || user) {    // Check for user in state
+            navigate('/')   // Redirect to home page
+            dispatch(reset())
+        }
+
+        dispatch(reset()) // Reset state back to default
+
+    }, [user, isError, isSuccess, message, navigate, dispatch]) // Dependency array, only trigger useEffect when these state values change
+
+    // When a form input is changed
     const onChange = (evt) => {
         setFormData((prevState) => ({
-            ...prevState,
-            [evt.target.name]: evt.target.value,
+            ...prevState,   // Copy unchanged values over from previous state
+            [evt.target.name]: evt.target.value,    // Update changed input with user input value
         }))
+    }
+
+    // When the form is submitted
+    const onSubmit = (evt) => {
+        evt.preventDefault()    // Prevent default event handling
+        console.log(evt)
+
+        if (password !== password2) {   // Check if password & confirmation are matching
+            toast.error('Passwords do not match')
+        } else {    // If they match, set user data equal to object containing form data
+            const userData = {
+                name,
+                email,
+                password,
+            }
+
+            // Dispatch register action and pass user data
+            dispatch(register(userData))
+        }
+    }
+
+    // Render a spinner if the application state is loading
+    if (isLoading) {
+        return <Spinner />
     }
 
     return <>
@@ -67,7 +117,7 @@ function Register() {
                 </div>
                 <div className="form-group">
                     <input
-                        type="password2"
+                        type="password"
                         className="form-control"
                         id="password2"
                         name="password2"
