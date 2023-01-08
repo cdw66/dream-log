@@ -23,7 +23,7 @@ const setDream = asyncHandler(async (req, res) => {
         throw new Error('Please add a title and description')
     }
 
-    const dream = await Dream.create( {
+    const dream = await Dream.create({
         title: req.body.title,
         description: req.body.description,
         user: req.user.id
@@ -39,21 +39,19 @@ const updateDream = asyncHandler(async (req, res) => {
 
     const dream = await Dream.findById(req.params.id)
 
-    if(!dream) {
+    if (!dream) {
         res.status(400)
         throw new Error('Dream not found')
     }
 
-    const user = await User.findById(req.user.id)
-
     // Check for user
-    if(!user) {
+    if (!req.user) {
         res.status(401)
         throw new Error('User not found')
     }
 
     // check if logged in user matches dream user
-    if(dream.user.toString() !== user.id) {
+    if (dream.user.toString() !== req.user.id) {
         res.status(401)
         throw new Error('User not authorized')
     }
@@ -71,33 +69,31 @@ const updateDream = asyncHandler(async (req, res) => {
 const deleteDream = asyncHandler(async (req, res) => {
     const dream = await Dream.findById(req.params.id)
 
-    if(!dream) {
+    if (!dream) {
         res.status(400)
         throw new Error('Dream not found')
     }
 
-    const user = await User.findById(req.user.id)
-
     // Check for user
-    if(!user) {
+    if (!req.user) {
         res.status(401)
         throw new Error('User not found')
     }
 
     // check if logged in user matches dream user
-    if(dream.user.toString() !== user.id) {
+    if (dream.user.toString() !== req.user.id) {
         res.status(401)
         throw new Error('User not authorized')
     }
 
     await dream.remove()
-    
-    res.status(200).json({id: req.params.id})
+
+    res.status(200).json({ id: req.params.id })
 })
 
 module.exports = {
-    getDreams, 
-    setDream, 
-    updateDream, 
+    getDreams,
+    setDream,
+    updateDream,
     deleteDream
 }
