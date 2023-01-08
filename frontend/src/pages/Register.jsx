@@ -51,7 +51,7 @@ function Register() {
     // When the form is submitted
     const onSubmit = (evt) => {
         evt.preventDefault()    // Prevent default event handling
-        console.log(evt)
+        // console.log(evt)
 
         if (password !== password2) {   // Check if password & confirmation are matching
             toast.error('Passwords do not match')
